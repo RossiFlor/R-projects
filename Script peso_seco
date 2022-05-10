@@ -1,0 +1,75 @@
+install.packages(c("ggplot2", "swirl", "lattice", "car", "fimport","tseries"))
+library(ggplot2)
+install.packages("curl", dependencies = TRUE)
+install.packages("httr", dependencies = TRUE)
+library("dplyr")
+install.packages("magrittr")
+library(magrittr)
+library(tidyverse)
+
+rm(list=ls())
+ls()  
+setwd('C:/Users/Flopina/Desktop/Analisis de datos/Datos Moat')
+
+peso_seco <- read.table('peso_seco.txt', header = TRUE )
+
+
+summary(peso_seco)
+head(peso_seco)
+str(peso_seco)
+
+peso_seco$ID = as.numeric(peso_seco$ID)
+peso_seco$Mass_loss_P = as.de(peso_seco$Mass_loss_P)
+
+class(peso_seco)
+
+
+##### Nueva tabla con columnas de medias y desvio por tiempo y especie
+
+medias <- summarise(group_by(peso_seco, Tiempo, Especie), mean = mean(Mass_loss_P))
+
+medias <- summarise(group_by(peso_seco, Tiempo, Especie), mean = mean(Mass_loss_P),sd = sd(Mass_loss_P))  
+  
+##### grafico en ggplot2 con desvio y con una linea que une las medias para visualizar mejor
+
+p1=ggplot(medias,aes(y=mean,x=Tiempo))
+p1+geom_point(aes(col=Especie), alpha=0.9, size=3) +
+  geom_errorbar(aes(ymin=mean-sd,ymax=mean+sd),position=position_dodge(0.3),width=0.05) +
+  geom_line(aes(group = Especie , col=Especie))
+
+######## Graficar de otra manera #########
+
+#Elimina elementos dulicados y me da 1 nombre por especie para las etiquetas 
+unique(peso_seco$Especie)
+
+#Para que me lo lea como factor y me permita crear etiquetas en el grafico y le asigne colores
+peso_seco$Especie = as.factor(peso_seco$Especie)
+#abro ventana aparte para graficar 
+windows()
+#Asigno los colores con los que quiero que me marque las distintas especies
+colores <- c("black", "red","blue",  "green")
+#Hago el grafico de dispersion
+plot(x = peso_seco$Tiempo , y = peso_seco$Mass_loss_P, col = colores [peso_seco$Especie], pch = 16, main = "Datos Descomposicion", xlab = "Tiempo", ylab = "% mass loss")
+#Defino la leyenda
+legend(x = "topleft", legend = c("Astelia", "Donatia", "Sphagnum", "Tetroncium"), fill = c("Black", "Red", "Blue", "Green"), title = "Especies")
+#No se cual especie es cada color asi que busco el valor mas bajo de la tabla en el tiempo 2 para saber cual es el verde
+peso_seco[order(peso_seco$Mass_loss_P),][1:5,]
+#eliminar el plot para rehacerlo: , ann=False al final del grafico
+
+##### Estadisticos descriptivos #####
+
+summary(peso_seco$Especie)
+
+by(peso_seco$Mass_loss_P , peso_seco$Especie , mean )
+
+install.packages("doBy")
+library(doBy)
+
+#Promedios por tiempo y especie
+m_massloss <- summaryBy(Mass_loss_P ~ Especie + Tiempo, data=peso_seco, FUN=mean)
+summaryBy(Mass_loss_P ~ Especie + Tiempo, data=peso_seco, FUN=mean)
+summaryBy(Mass_loss_P ~ Especie + Tiempo, data=peso_seco, FUN=sd)
+sd_massloss <- summaryBy(Mass_loss_P ~ Especie + Tiempo, data=peso_seco, FUN=sd)
+
+
+
